@@ -1,37 +1,80 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import userData from "../data/users.json";
+import ProfileCard from "../Components/ProfileCard";
+import Navbar from "../Components/Navbar";
+import CardModal from "../Components/CardModal";
+
+let debounceTimeout;
 
 const SearchResults = () => {
   const location = useLocation();
-  const query = new URLSearchParams(location.search).get("query") || "";
-  const [results, setResults] = useState([]);
+  const searchTextFromURL =
+    new URLSearchParams(location.search).get("searchText") || "";
+  const [searchText, setSearchText] = useState(searchTextFromURL);
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
-    const filteredData = userData.filter((user) =>
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(query.toLowerCase())
-    );
-    setResults(filteredData);
-  }, [query]);
+    const handleFilter = () => {
+      const filteredData = userData.filter((entry) =>
+        Object.values(entry).some((value) =>
+          value.toString().toLowerCase().includes(searchText.toLowerCase())
+        )
+      );
+      setSearchResults(filteredData);
+    };
+
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(handleFilter, 300); // 300ms debounce
+    return () => clearTimeout(debounceTimeout);
+  }, [searchText]);
+
+  const handleDetailsClick = (cardData) => {
+    setSelectedCard(cardData);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCard(null);
+  };
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Search Results</h2>
-      {results.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {results.map((user, index) => (
-            <div key={index} className="border p-4 rounded-lg shadow-lg">
-              <img src="https://via.placeholder.com/150" alt="User" className="rounded-full mb-4" />
-              <h3 className="text-lg font-bold">{user.firstName} {user.lastName}</h3>
-              <p>{user.address}</p>
-              <p>{user.phone}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-500">No results found for "{query}"</p>
+    <>
+      <Navbar
+        isSearchBarPresent={true}
+        searchText={searchText}
+        onSearchTextChange={(text) => setSearchText(text)}
+      />
+      <div
+        className={`grid grid-cols-3 gap-6 p-4 ${
+          selectedCard ? "blur-sm" : ""
+        }`}
+      >
+        {searchResults.map((item) => (
+          <ProfileCard
+            key={item.contact_number}
+            name={`${item.first_name} ${item.last_name}`}
+            city={item.city}
+            contact_number={item.contact_number}
+            onDetailsClick={() =>
+              handleDetailsClick({
+                name: `${item.first_name} ${item.last_name}`,
+                city: item.city,
+                contact_number: item.contact_number,
+              })
+            }
+          />
+        ))}
+      </div>
+      {selectedCard && (
+        <CardModal
+          name={selectedCard.name}
+          city={selectedCard.city}
+          contact_number={selectedCard.contact_number}
+          onClose={handleCloseModal}
+        />
       )}
-    </div>
+    </>
   );
 };
 

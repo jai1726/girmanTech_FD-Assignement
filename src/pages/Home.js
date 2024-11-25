@@ -1,30 +1,26 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../Components/Navbar';
-// import logo from '../assets/logo.png'; 
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../Components/Navbar";
+import SearchBar from "../Components/SearchBar";
+import logo from "../assets/logo.png";
 
 const Home = () => {
-  const [query, setQuery] = useState('');
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && query.trim()) {
-      navigate(`/results?query=${query}`);
-    }
+  const handleEnterClick = (searchText) => {
+    navigate(`/search?searchText=${searchText}`);
   };
 
   return (
     <>
-      <Navbar/>
-    <div>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleSearch}
-          className="border p-2 rounded-lg w-80 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <Navbar isSearchBarPresent={false} />
+      <div className="flex flex-col items-center justify center">
+        <div className="flex  justify-center items-center">
+          <img src={logo} alt="logo" className="h-24 w-24" />
+          <span className="text-4xl font-bold">Girman</span>
+        </div>
+
+        <SearchBar handleEnterClick={handleEnterClick} />
       </div>
     </>
   );
